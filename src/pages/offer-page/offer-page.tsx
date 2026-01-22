@@ -3,7 +3,7 @@ import Map from '../../components/map/map';
 import OffersList from '../../components/offers-list/offers-list';
 import ReviewForm from '../../components/review-form/review-form';
 import ReviewsList from '../../components/reviews-list/reviews-list';
-import { AMSTERDAM } from '../../const';
+import { CITIES, DEFAULT_CITY } from '../../const';
 import { Offer } from '../../types/offer';
 import { Review } from '../../types/review';
 import NotFoundPage from '../not-found-page/not-found-page';
@@ -24,6 +24,7 @@ function OfferPage({ offers, reviews }: OfferPageProps): JSX.Element {
     return <NotFoundPage />;
   }
 
+  const city = CITIES.find((item) => item.name === offer.city) ?? DEFAULT_CITY;
   const avatarClassName = `offer__avatar-wrapper${offer.host.isPro ? ' offer__avatar-wrapper--pro' : ''} user__avatar-wrapper`;
 
   return (
@@ -145,7 +146,7 @@ function OfferPage({ offers, reviews }: OfferPageProps): JSX.Element {
               </section>
             </div>
           </div>
-          <Map city={AMSTERDAM} offers={nearbyOffers} activeOfferId={null} className="offer__map map" />
+          <Map city={city} offers={nearbyOffers} activeOfferId={null} className="offer__map map" />
         </section>
         <div className="container">
           <section className="near-places places">
