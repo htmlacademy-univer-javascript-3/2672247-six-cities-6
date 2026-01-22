@@ -6,7 +6,7 @@ import Map from '../../components/map/map';
 import OffersList from '../../components/offers-list/offers-list';
 import SortingOptions from '../../components/sorting-options/sorting-options';
 import Spinner from '../../components/spinner/spinner';
-import { CITIES, DEFAULT_CITY, SortType } from '../../const';
+import { AuthorizationStatus, CITIES, DEFAULT_CITY, SortType } from '../../const';
 import { AppDispatch, RootState } from '../../store';
 import { changeCity } from '../../store/action';
 import { Offer } from '../../types/offer';
@@ -31,6 +31,7 @@ function MainPage(): JSX.Element {
   const city = useSelector((state: RootState) => state.city);
   const offers = useSelector((state: RootState) => state.offers);
   const isOffersLoading = useSelector((state: RootState) => state.isOffersLoading);
+  const authorizationStatus = useSelector((state: RootState) => state.authorizationStatus);
   const selectedCity = CITIES.find((item) => item.name === city) ?? DEFAULT_CITY;
   const offersInCity = offers.filter((offer) => offer.city === selectedCity.name);
   const sortedOffers = sortOffers(offersInCity, activeSort);
@@ -61,18 +62,29 @@ function MainPage(): JSX.Element {
             </div>
             <nav className="header__nav">
               <ul className="header__nav-list">
-                <li className="header__nav-item user">
-                  <Link className="header__nav-link header__nav-link--profile" to="/login">
-                    <div className="header__avatar-wrapper user__avatar-wrapper"></div>
-                    <span className="header__user-name user__name">Oliver.conner@gmail.com</span>
-                    <span className="header__favorite-count">3</span>
-                  </Link>
-                </li>
-                <li className="header__nav-item">
-                  <Link className="header__nav-link" to="/login">
-                    <span className="header__signout">Sign out</span>
-                  </Link>
-                </li>
+                {authorizationStatus === AuthorizationStatus.Auth ? (
+                  <>
+                    <li className="header__nav-item user">
+                      <Link className="header__nav-link header__nav-link--profile" to="/favorites">
+                        <div className="header__avatar-wrapper user__avatar-wrapper"></div>
+                        <span className="header__user-name user__name">Oliver.conner@gmail.com</span>
+                        <span className="header__favorite-count">3</span>
+                      </Link>
+                    </li>
+                    <li className="header__nav-item">
+                      <Link className="header__nav-link" to="/login">
+                        <span className="header__signout">Sign out</span>
+                      </Link>
+                    </li>
+                  </>
+                ) : (
+                  <li className="header__nav-item user">
+                    <Link className="header__nav-link header__nav-link--profile" to="/login">
+                      <div className="header__avatar-wrapper user__avatar-wrapper"></div>
+                      <span className="header__login">Sign in</span>
+                    </Link>
+                  </li>
+                )}
               </ul>
             </nav>
           </div>

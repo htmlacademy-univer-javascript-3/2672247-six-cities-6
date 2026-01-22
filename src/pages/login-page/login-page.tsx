@@ -1,6 +1,32 @@
-import { Link } from 'react-router-dom';
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { AuthorizationStatus } from '../../const';
+import { login } from '../../store/api-actions';
+import { AppDispatch, RootState } from '../../store';
 
 function LoginPage(): JSX.Element {
+  const [formState, setFormState] = useState({ email: '', password: '' });
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+  const authorizationStatus = useSelector((state: RootState) => state.authorizationStatus);
+
+  useEffect(() => {
+    if (authorizationStatus === AuthorizationStatus.Auth) {
+      navigate('/');
+    }
+  }, [authorizationStatus, navigate]);
+
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setFormState((prevState) => ({ ...prevState, [name]: value }));
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    dispatch(login({ email: formState.email, password: formState.password }));
+  };
+
   return (
     <div className="page page--gray page--login">
       <header className="header">
@@ -25,7 +51,7 @@ function LoginPage(): JSX.Element {
         <div className="page__login-container container">
           <section className="login">
             <h1 className="login__title">Sign in</h1>
-            <form className="login__form form" action="#" method="post">
+            <form className="login__form form" action="#" method="post" onSubmit={handleSubmit}>
               <div className="login__input-wrapper form__input-wrapper">
                 <label className="visually-hidden">E-mail</label>
                 <input
@@ -34,6 +60,8 @@ function LoginPage(): JSX.Element {
                   name="email"
                   placeholder="Email"
                   required
+                  value={formState.email}
+                  onChange={handleInputChange}
                 />
               </div>
               <div className="login__input-wrapper form__input-wrapper">
@@ -44,6 +72,8 @@ function LoginPage(): JSX.Element {
                   name="password"
                   placeholder="Password"
                   required
+                  value={formState.password}
+                  onChange={handleInputChange}
                 />
               </div>
               <button className="login__submit form__submit button" type="submit">

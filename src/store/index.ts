@@ -1,10 +1,16 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { createAPI } from '../api';
+import { AuthorizationStatus } from '../const';
+import { setAuthorizationStatus } from './action';
 import reducer from './reducer';
 
-const api = createAPI();
+let store: ReturnType<typeof configureStore>;
 
-const store = configureStore({
+const api = createAPI(() => {
+  store.dispatch(setAuthorizationStatus(AuthorizationStatus.NoAuth));
+});
+
+store = configureStore({
   reducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

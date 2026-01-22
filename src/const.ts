@@ -62,5 +62,11 @@ export const SORT_OPTIONS = [
 
 export type SortType = typeof SORT_OPTIONS[number];
 
+export enum AuthorizationStatus {
+  Auth = 'AUTH',
+  NoAuth = 'NO_AUTH',
+  Unknown = 'UNKNOWN',
+}
+
 export const URL_MARKER_DEFAULT = '/img/pin.svg';
 export const URL_MARKER_CURRENT = '/img/pin-active.svg';

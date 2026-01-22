@@ -1,6 +1,9 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AxiosInstance } from 'axios';
+import { AuthorizationStatus } from '../const';
+import { saveToken } from '../services/token';
 import { Offer } from '../types/offer';
+import { setAuthorizationStatus } from './action';
 
 type OfferServer = {
   id: string;
@@ -61,5 +64,35 @@ export const fetchOffers = createAsyncThunk<Offer[], undefined, { extra: AxiosIn
   async (_arg, { extra: api }) => {
     const { data } = await api.get<OfferServer[]>('/offers');
     return data.map(adaptOffer);
+  }
+);
+
+type AuthData = {
+  email: string;
+  password: string;
+};
+
+type AuthInfo = {
+  token: string;
+};
+
+export const checkAuth = createAsyncThunk<void, undefined, { extra: AxiosInstance }>(
+  'user/checkAuth',
+  async (_arg, { dispatch, extra: api }) => {
+    try {
+      await api.get('/login');
+      dispatch(setAuthorizationStatus(AuthorizationStatus.Auth));
+    } catch {
+      dispatch(setAuthorizationStatus(AuthorizationStatus.NoAuth));
+    }
+  }
+);
+
+export const login = createAsyncThunk<void, AuthData, { extra: AxiosInstance }>(
+  'user/login',
+  async ({ email, password }, { dispatch, extra: api }) => {
+    const { data } = await api.post<AuthInfo>('/login', { email, password });
+    saveToken(data.token);
+    dispatch(setAuthorizationStatus(AuthorizationStatus.Auth));
   }
 );
