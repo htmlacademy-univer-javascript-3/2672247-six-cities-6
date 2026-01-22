@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosHeaders, AxiosInstance } from 'axios';
 import { dropToken, getToken } from './services/token';
 
 const BASE_URL = 'https://14.design.htmlacademy.pro/six-cities';
@@ -13,10 +13,10 @@ export const createAPI = (onUnauthorized: () => void): AxiosInstance => {
   api.interceptors.request.use((config) => {
     const token = getToken();
     if (token) {
-      config.headers = {
+      config.headers = AxiosHeaders.from({
         ...config.headers,
         'X-Token': token,
-      };
+      });
     }
     return config;
   });
