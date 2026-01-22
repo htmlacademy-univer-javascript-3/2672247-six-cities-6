@@ -1,18 +1,25 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import FavoritesPage from '../../pages/favorites-page/favorites-page';
 import LoginPage from '../../pages/login-page/login-page';
 import MainPage from '../../pages/main-page/main-page';
 import NotFoundPage from '../../pages/not-found-page/not-found-page';
 import OfferPage from '../../pages/offer-page/offer-page';
 import { reviews } from '../../mocks/reviews';
-import { RootState } from '../../store';
+import { fetchOffers } from '../../store/api-actions';
+import { AppDispatch, RootState } from '../../store';
 import PrivateRoute from '../private-route/private-route';
 
 function App(): JSX.Element {
+  const dispatch = useDispatch<AppDispatch>();
   const offers = useSelector((state: RootState) => state.offers);
   const favoriteOffers = offers.filter((offer) => offer.isFavorite);
   const isAuthorized = false;
+
+  useEffect(() => {
+    dispatch(fetchOffers());
+  }, [dispatch]);
 
   return (
     <BrowserRouter>

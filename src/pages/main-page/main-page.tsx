@@ -5,8 +5,9 @@ import CitiesList from '../../components/cities-list/cities-list';
 import Map from '../../components/map/map';
 import OffersList from '../../components/offers-list/offers-list';
 import SortingOptions from '../../components/sorting-options/sorting-options';
+import Spinner from '../../components/spinner/spinner';
 import { CITIES, DEFAULT_CITY, SortType } from '../../const';
-import { RootState } from '../../store';
+import { AppDispatch, RootState } from '../../store';
 import { changeCity } from '../../store/action';
 import { Offer } from '../../types/offer';
 
@@ -26,9 +27,10 @@ const sortOffers = (offers: Offer[], sortType: SortType): Offer[] => {
 function MainPage(): JSX.Element {
   const [activeOfferId, setActiveOfferId] = useState<string | null>(null);
   const [activeSort, setActiveSort] = useState<SortType>('Popular');
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const city = useSelector((state: RootState) => state.city);
   const offers = useSelector((state: RootState) => state.offers);
+  const isOffersLoading = useSelector((state: RootState) => state.isOffersLoading);
   const selectedCity = CITIES.find((item) => item.name === city) ?? DEFAULT_CITY;
   const offersInCity = offers.filter((offer) => offer.city === selectedCity.name);
   const sortedOffers = sortOffers(offersInCity, activeSort);
@@ -90,7 +92,11 @@ function MainPage(): JSX.Element {
                 {offersInCity.length} places to stay in {selectedCity.name}
               </b>
               <SortingOptions activeSort={activeSort} onSortChange={setActiveSort} />
-              <OffersList offers={sortedOffers} onActiveOfferChange={setActiveOfferId} />
+              {isOffersLoading ? (
+                <Spinner />
+              ) : (
+                <OffersList offers={sortedOffers} onActiveOfferChange={setActiveOfferId} />
+              )}
             </section>
             <div className="cities__right-section">
               <Map
