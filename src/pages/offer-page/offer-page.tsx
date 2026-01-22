@@ -1,31 +1,55 @@
+import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import Map from '../../components/map/map';
 import OffersList from '../../components/offers-list/offers-list';
 import ReviewForm from '../../components/review-form/review-form';
 import ReviewsList from '../../components/reviews-list/reviews-list';
-import { CITIES, DEFAULT_CITY } from '../../const';
-import { Offer } from '../../types/offer';
-import { Review } from '../../types/review';
+import Spinner from '../../components/spinner/spinner';
+import { AuthorizationStatus, CITIES, DEFAULT_CITY } from '../../const';
+import { fetchComments, fetchNearbyOffers, fetchOffer, postComment } from '../../store/api-actions';
+import { AppDispatch, RootState } from '../../store';
 import NotFoundPage from '../not-found-page/not-found-page';
-
-type OfferPageProps = {
-  offers: Offer[];
-  reviews: Review[];
-};
 
 const ratingToPercent = (rating: number): string => `${Math.round(rating) * 20}%`;
 
-function OfferPage({ offers, reviews }: OfferPageProps): JSX.Element {
+function OfferPage(): JSX.Element {
   const { id } = useParams();
-  const offer = offers.find((item) => item.id === id);
-  const nearbyOffers = offers.filter((item) => item.id !== id).slice(0, 3);
+  const dispatch = useDispatch<AppDispatch>();
+  const offer = useSelector((state: RootState) => state.offer);
+  const nearbyOffers = useSelector((state: RootState) => state.nearbyOffers);
+  const comments = useSelector((state: RootState) => state.comments);
+  const isOfferLoading = useSelector((state: RootState) => state.isOfferLoading);
+  const isCommentSubmitting = useSelector((state: RootState) => state.isCommentSubmitting);
+  const isOfferNotFound = useSelector((state: RootState) => state.isOfferNotFound);
+  const authorizationStatus = useSelector((state: RootState) => state.authorizationStatus);
 
-  if (!offer) {
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchOffer(id));
+      dispatch(fetchNearbyOffers(id));
+      dispatch(fetchComments(id));
+    }
+  }, [dispatch, id]);
+
+  if (isOfferNotFound) {
     return <NotFoundPage />;
+  }
+
+  if (isOfferLoading || !offer) {
+    return <Spinner />;
   }
 
   const city = CITIES.find((item) => item.name === offer.city) ?? DEFAULT_CITY;
   const avatarClassName = `offer__avatar-wrapper${offer.host.isPro ? ' offer__avatar-wrapper--pro' : ''} user__avatar-wrapper`;
+
+  const handleCommentSubmit = (comment: string, rating: number) => {
+    if (!id) {
+      return;
+    }
+
+    dispatch(postComment({ offerId: id, comment, rating }));
+  };
 
   return (
     <div className="page">
@@ -141,8 +165,10 @@ function OfferPage({ offers, reviews }: OfferPageProps): JSX.Element {
                 </div>
               </div>
               <section className="offer__reviews reviews">
-                <ReviewsList reviews={reviews} />
-                <ReviewForm />
+                <ReviewsList reviews={comments} />
+                {authorizationStatus === AuthorizationStatus.Auth && (
+                  <ReviewForm onSubmit={handleCommentSubmit} isSubmitting={isCommentSubmitting} />
+                )}
               </section>
             </div>
           </div>

@@ -34,6 +34,20 @@ function Map({ city, offers, activeOfferId, className = 'cities__map map' }: Map
       return;
     }
 
+    map.setView(
+      {
+        lat: city.location.latitude,
+        lng: city.location.longitude,
+      },
+      city.location.zoom
+    );
+  }, [map, city]);
+
+  useEffect(() => {
+    if (!map) {
+      return;
+    }
+
     const markerLayer = layerGroup().addTo(map);
 
     offers.forEach((offer) => {

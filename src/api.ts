@@ -13,7 +13,10 @@ export const createAPI = (onUnauthorized: () => void): AxiosInstance => {
   api.interceptors.request.use((config) => {
     const token = getToken();
     if (token) {
-      config.headers['X-Token'] = token;
+      config.headers = {
+        ...config.headers,
+        'X-Token': token,
+      };
     }
     return config;
   });
