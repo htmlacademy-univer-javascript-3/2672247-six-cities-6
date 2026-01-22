@@ -1,11 +1,18 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
 
+type ReviewFormProps = {
+  onSubmit: (comment: string, rating: number) => void;
+  isSubmitting?: boolean;
+};
+
 type ReviewFormState = {
   rating: string;
   comment: string;
 };
 
-function ReviewForm(): JSX.Element {
+const MIN_COMMENT_LENGTH = 50;
+
+function ReviewForm({ onSubmit, isSubmitting = false }: ReviewFormProps): JSX.Element {
   const [formState, setFormState] = useState<ReviewFormState>({
     rating: '',
     comment: '',
@@ -27,7 +34,16 @@ function ReviewForm(): JSX.Element {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (!formState.rating) {
+      return;
+    }
+
+    onSubmit(formState.comment, Number(formState.rating));
   };
+
+  const isSubmitDisabled =
+    isSubmitting || formState.rating === '' || formState.comment.length < MIN_COMMENT_LENGTH;
 
   return (
     <form className="reviews__form form" action="#" method="post" onSubmit={handleSubmit}>
@@ -43,6 +59,7 @@ function ReviewForm(): JSX.Element {
           type="radio"
           checked={formState.rating === '5'}
           onChange={handleRatingChange}
+          disabled={isSubmitting}
         />
         <label htmlFor="5-stars" className="reviews__rating-label form__rating-label" title="perfect">
           <svg className="form__star-image" width="37" height="33">
@@ -58,6 +75,7 @@ function ReviewForm(): JSX.Element {
           type="radio"
           checked={formState.rating === '4'}
           onChange={handleRatingChange}
+          disabled={isSubmitting}
         />
         <label htmlFor="4-stars" className="reviews__rating-label form__rating-label" title="good">
           <svg className="form__star-image" width="37" height="33">
@@ -73,6 +91,7 @@ function ReviewForm(): JSX.Element {
           type="radio"
           checked={formState.rating === '3'}
           onChange={handleRatingChange}
+          disabled={isSubmitting}
         />
         <label htmlFor="3-stars" className="reviews__rating-label form__rating-label" title="not bad">
           <svg className="form__star-image" width="37" height="33">
@@ -88,6 +107,7 @@ function ReviewForm(): JSX.Element {
           type="radio"
           checked={formState.rating === '2'}
           onChange={handleRatingChange}
+          disabled={isSubmitting}
         />
         <label htmlFor="2-stars" className="reviews__rating-label form__rating-label" title="badly">
           <svg className="form__star-image" width="37" height="33">
@@ -103,6 +123,7 @@ function ReviewForm(): JSX.Element {
           type="radio"
           checked={formState.rating === '1'}
           onChange={handleRatingChange}
+          disabled={isSubmitting}
         />
         <label htmlFor="1-star" className="reviews__rating-label form__rating-label" title="terribly">
           <svg className="form__star-image" width="37" height="33">
@@ -117,13 +138,14 @@ function ReviewForm(): JSX.Element {
         placeholder="Tell how was your stay, what you like and what can be improved"
         value={formState.comment}
         onChange={handleCommentChange}
+        disabled={isSubmitting}
       ></textarea>
       <div className="reviews__button-wrapper">
         <p className="reviews__help">
           To submit review please make sure to set <span className="reviews__star">rating</span> and describe your
           stay with at least <b className="reviews__text-amount">50 characters</b>.
         </p>
-        <button className="reviews__submit form__submit button" type="submit" disabled>
+        <button className="reviews__submit form__submit button" type="submit" disabled={isSubmitDisabled}>
           Submit
         </button>
       </div>

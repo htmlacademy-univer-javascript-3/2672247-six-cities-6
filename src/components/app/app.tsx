@@ -6,7 +6,6 @@ import LoginPage from '../../pages/login-page/login-page';
 import MainPage from '../../pages/main-page/main-page';
 import NotFoundPage from '../../pages/not-found-page/not-found-page';
 import OfferPage from '../../pages/offer-page/offer-page';
-import { reviews } from '../../mocks/reviews';
 import { checkAuth, fetchOffers } from '../../store/api-actions';
 import { AppDispatch, RootState } from '../../store';
 import PrivateRoute from '../private-route/private-route';
@@ -34,7 +33,7 @@ function App(): JSX.Element {
             </PrivateRoute>
           )}
         />
-        <Route path="/offer/:id" element={<OfferPage offers={offers} reviews={reviews} />} />
+        <Route path="/offer/:id" element={<OfferPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
