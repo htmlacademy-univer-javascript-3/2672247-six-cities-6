@@ -7,11 +7,18 @@ type OfferCardProps = {
   variant?: 'cities' | 'favorites' | 'near-places';
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
+  onBookmarkClick?: () => void;
 };
 
 const ratingToPercent = (rating: number): string => `${Math.round(rating) * 20}%`;
 
-function OfferCard({ offer, variant = 'cities', onMouseEnter, onMouseLeave }: OfferCardProps): JSX.Element {
+function OfferCard({
+  offer,
+  variant = 'cities',
+  onMouseEnter,
+  onMouseLeave,
+  onBookmarkClick,
+}: OfferCardProps): JSX.Element {
   const cardClassName = (() => {
     switch (variant) {
       case 'favorites':
@@ -68,7 +75,7 @@ function OfferCard({ offer, variant = 'cities', onMouseEnter, onMouseLeave }: Of
             <b className="place-card__price-value">&euro;{offer.price}</b>
             <span className="place-card__price-text">&#47;&nbsp;night</span>
           </div>
-          <button className={bookmarkClassName} type="button">
+          <button className={bookmarkClassName} type="button" onClick={onBookmarkClick}>
             <svg className="place-card__bookmark-icon" width="18" height="19">
               <use xlinkHref="#icon-bookmark"></use>
             </svg>
@@ -90,4 +97,6 @@ function OfferCard({ offer, variant = 'cities', onMouseEnter, onMouseLeave }: Of
   );
 }
 
-export default memo(OfferCard);
+const MemoizedOfferCard = memo(OfferCard);
+
+export default MemoizedOfferCard;

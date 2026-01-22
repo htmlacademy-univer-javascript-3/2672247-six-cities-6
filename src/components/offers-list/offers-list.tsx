@@ -6,9 +6,15 @@ type OffersListProps = {
   offers: Offer[];
   variant?: 'cities' | 'favorites' | 'near-places';
   onActiveOfferChange?: (offerId: string | null) => void;
+  onFavoriteToggle?: (offerId: string, isFavorite: boolean) => void;
 };
 
-function OffersList({ offers, variant = 'cities', onActiveOfferChange }: OffersListProps): JSX.Element {
+function OffersList({
+  offers,
+  variant = 'cities',
+  onActiveOfferChange,
+  onFavoriteToggle,
+}: OffersListProps): JSX.Element {
   const listClassName = (() => {
     switch (variant) {
       case 'favorites':
@@ -29,10 +35,13 @@ function OffersList({ offers, variant = 'cities', onActiveOfferChange }: OffersL
           variant={variant}
           onMouseEnter={() => onActiveOfferChange?.(offer.id)}
           onMouseLeave={() => onActiveOfferChange?.(null)}
+          onBookmarkClick={() => onFavoriteToggle?.(offer.id, offer.isFavorite)}
         />
       ))}
     </div>
   );
 }
 
-export default memo(OffersList);
+const MemoizedOffersList = memo(OffersList);
+
+export default MemoizedOffersList;

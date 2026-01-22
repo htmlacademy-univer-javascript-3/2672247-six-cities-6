@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
 import CitiesList from '../../components/cities-list/cities-list';
+import MainEmpty from '../../components/main-empty/main-empty';
 import Map from '../../components/map/map';
 import OffersList from '../../components/offers-list/offers-list';
 import SortingOptions from '../../components/sorting-options/sorting-options';
 import Spinner from '../../components/spinner/spinner';
 import { AuthorizationStatus, CITIES, DEFAULT_CITY, SortType } from '../../const';
-import { AppDispatch } from '../../store';
+import { useAppDispatch, useAppSelector } from '../../hooks/store';
 import { changeCity } from '../../store/slices/app-slice';
+import { toggleFavorite } from '../../store/api-actions';
 import {
   selectAuthorizationStatus,
   selectCity,
+  selectFavoritesCount,
   selectOffersByCity,
   selectOffersLoading,
   selectSortedOffers,
@@ -20,17 +22,21 @@ import {
 function MainPage(): JSX.Element {
   const [activeOfferId, setActiveOfferId] = useState<string | null>(null);
   const [activeSort, setActiveSort] = useState<SortType>('Popular');
-  const dispatch = useDispatch<AppDispatch>();
-  const city = useSelector(selectCity);
-  const isOffersLoading = useSelector(selectOffersLoading);
-  const authorizationStatus = useSelector(selectAuthorizationStatus);
-  const offersInCity = useSelector(selectOffersByCity);
-  const sortedOffers = useSelector((state) => selectSortedOffers(state, activeSort));
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const city = useAppSelector(selectCity);
+  const isOffersLoading = useAppSelector(selectOffersLoading);
+  const authorizationStatus = useAppSelector(selectAuthorizationStatus);
+  const favoritesCount = useAppSelector(selectFavoritesCount);
+  const offersInCity = useAppSelector(selectOffersByCity);
+  const sortedOffers = useAppSelector((state) => selectSortedOffers(state, activeSort));
 
   const selectedCity = useMemo(
     () => CITIES.find((item) => item.name === city) ?? DEFAULT_CITY,
     [city]
   );
+
+  const isEmpty = !isOffersLoading && offersInCity.length === 0;
 
   useEffect(() => {
     setActiveOfferId(null);
@@ -46,6 +52,18 @@ function MainPage(): JSX.Element {
   const handleSortChange = useCallback((sortType: SortType) => {
     setActiveSort(sortType);
   }, []);
+
+  const handleFavoriteToggle = useCallback(
+    (offerId: string, isFavorite: boolean) => {
+      if (authorizationStatus !== AuthorizationStatus.Auth) {
+        navigate('/login');
+        return;
+      }
+
+      dispatch(toggleFavorite({ offerId, status: isFavorite ? 0 : 1 }));
+    },
+    [authorizationStatus, dispatch, navigate]
+  );
 
   return (
     <div className="page page--gray page--main">
@@ -71,7 +89,7 @@ function MainPage(): JSX.Element {
                       <Link className="header__nav-link header__nav-link--profile" to="/favorites">
                         <div className="header__avatar-wrapper user__avatar-wrapper"></div>
                         <span className="header__user-name user__name">Oliver.conner@gmail.com</span>
-                        <span className="header__favorite-count">3</span>
+                        <span className="header__favorite-count">{favoritesCount}</span>
                       </Link>
                     </li>
                     <li className="header__nav-item">
@@ -94,34 +112,42 @@ function MainPage(): JSX.Element {
         </div>
       </header>
 
-      <main className="page__main page__main--index">
+      <main className={`page__main page__main--index${isEmpty ? ' page__main--index-empty' : ''}`}>
         <h1 className="visually-hidden">Cities</h1>
         <div className="tabs">
           <CitiesList cities={CITIES} activeCity={city} onCityClick={handleCityClick} />
         </div>
         <div className="cities">
-          <div className="cities__places-container container">
-            <section className="cities__places places" data-active-offer-id={activeOfferId ?? ''}>
-              <h2 className="visually-hidden">Places</h2>
-              <b className="places__found">
-                {offersInCity.length} places to stay in {selectedCity.name}
-              </b>
-              <SortingOptions activeSort={activeSort} onSortChange={handleSortChange} />
-              {isOffersLoading ? (
-                <Spinner />
-              ) : (
-                <OffersList offers={sortedOffers} onActiveOfferChange={setActiveOfferId} />
-              )}
-            </section>
-            <div className="cities__right-section">
-              <Map
-                city={selectedCity}
-                offers={sortedOffers}
-                activeOfferId={activeOfferId}
-                className="cities__map map"
-              />
+          {isEmpty ? (
+            <MainEmpty cityName={selectedCity.name} />
+          ) : (
+            <div className="cities__places-container container">
+              <section className="cities__places places" data-active-offer-id={activeOfferId ?? ''}>
+                <h2 className="visually-hidden">Places</h2>
+                <b className="places__found">
+                  {offersInCity.length} places to stay in {selectedCity.name}
+                </b>
+                <SortingOptions activeSort={activeSort} onSortChange={handleSortChange} />
+                {isOffersLoading ? (
+                  <Spinner />
+                ) : (
+                  <OffersList
+                    offers={sortedOffers}
+                    onActiveOfferChange={setActiveOfferId}
+                    onFavoriteToggle={handleFavoriteToggle}
+                  />
+                )}
+              </section>
+              <div className="cities__right-section">
+                <Map
+                  city={selectedCity}
+                  offers={sortedOffers}
+                  activeOfferId={activeOfferId}
+                  className="cities__map map"
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </main>
     </div>

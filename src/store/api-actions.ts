@@ -92,6 +92,14 @@ export const fetchOffers = createAsyncThunk<Offer[], undefined, { extra: AxiosIn
   }
 );
 
+export const fetchFavorites = createAsyncThunk<Offer[], undefined, { extra: AxiosInstance }>(
+  'favorites/fetch',
+  async (_arg, { extra: api }) => {
+    const { data } = await api.get<OfferServer[]>('favorite');
+    return data.map(adaptOffer);
+  }
+);
+
 export const fetchOffer = createAsyncThunk<Offer, string, { extra: AxiosInstance }>(
   'offer/fetch',
   async (offerId, { extra: api }) => {
@@ -157,5 +165,18 @@ export const postComment = createAsyncThunk<Review, CommentPost, { extra: AxiosI
   async ({ offerId, comment, rating }, { extra: api }) => {
     const { data } = await api.post<CommentServer>(`comments/${offerId}`, { comment, rating });
     return adaptComment(data);
+  }
+);
+
+type FavoriteStatus = {
+  offerId: string;
+  status: 0 | 1;
+};
+
+export const toggleFavorite = createAsyncThunk<Offer, FavoriteStatus, { extra: AxiosInstance }>(
+  'favorites/toggle',
+  async ({ offerId, status }, { extra: api }) => {
+    const { data } = await api.post<OfferServer>(`favorite/${offerId}/${status}`);
+    return adaptOffer(data);
   }
 );

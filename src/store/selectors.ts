@@ -13,6 +13,8 @@ export const selectComments = (state: RootState) => state.offer.comments;
 export const selectIsOfferLoading = (state: RootState) => state.offer.isOfferLoading;
 export const selectIsCommentSubmitting = (state: RootState) => state.offer.isCommentSubmitting;
 export const selectIsOfferNotFound = (state: RootState) => state.offer.isOfferNotFound;
+export const selectFavorites = (state: RootState) => state.favorites.offers;
+export const selectFavoritesCount = (state: RootState) => state.favorites.offers.length;
 
 export const selectOffersByCity = createSelector(
   [selectOffers, selectCity],
@@ -37,6 +39,4 @@ export const selectSortedOffers = createSelector(
   (offers, sortType) => sortOffers(offers, sortType)
 );
 
-export const selectFavoriteOffers = createSelector([selectOffers], (offers) =>
-  offers.filter((offer) => offer.isFavorite)
-);
+export const selectFavoriteOffers = createSelector([selectFavorites], (offers) => offers);

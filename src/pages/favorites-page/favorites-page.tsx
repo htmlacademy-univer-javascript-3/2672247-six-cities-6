@@ -1,5 +1,9 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import OffersList from '../../components/offers-list/offers-list';
+import { AuthorizationStatus } from '../../const';
+import { useAppDispatch, useAppSelector } from '../../hooks/store';
+import { toggleFavorite } from '../../store/api-actions';
+import { selectAuthorizationStatus } from '../../store/selectors';
 import { Offer } from '../../types/offer';
 
 type FavoritesPageProps = {
@@ -7,6 +11,19 @@ type FavoritesPageProps = {
 };
 
 function FavoritesPage({ offers }: FavoritesPageProps): JSX.Element {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const authorizationStatus = useAppSelector(selectAuthorizationStatus);
+
+  const handleFavoriteToggle = (offerId: string, isFavorite: boolean) => {
+    if (authorizationStatus !== AuthorizationStatus.Auth) {
+      navigate('/login');
+      return;
+    }
+
+    dispatch(toggleFavorite({ offerId, status: isFavorite ? 0 : 1 }));
+  };
+
   return (
     <div className="page">
       <header className="header">
@@ -56,7 +73,7 @@ function FavoritesPage({ offers }: FavoritesPageProps): JSX.Element {
                     </a>
                   </div>
                 </div>
-                <OffersList offers={offers} variant="favorites" />
+                <OffersList offers={offers} variant="favorites" onFavoriteToggle={handleFavoriteToggle} />
               </li>
             </ul>
           </section>

@@ -1,14 +1,13 @@
-import { useEffect, useMemo } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useCallback, useEffect, useMemo } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import Map from '../../components/map/map';
 import OffersList from '../../components/offers-list/offers-list';
 import ReviewForm from '../../components/review-form/review-form';
 import ReviewsList from '../../components/reviews-list/reviews-list';
 import Spinner from '../../components/spinner/spinner';
 import { AuthorizationStatus, CITIES, DEFAULT_CITY } from '../../const';
-import { fetchComments, fetchNearbyOffers, fetchOffer, postComment } from '../../store/api-actions';
-import { AppDispatch } from '../../store';
+import { useAppDispatch, useAppSelector } from '../../hooks/store';
+import { fetchComments, fetchNearbyOffers, fetchOffer, postComment, toggleFavorite } from '../../store/api-actions';
 import {
   selectAuthorizationStatus,
   selectComments,
@@ -24,14 +23,15 @@ const ratingToPercent = (rating: number): string => `${Math.round(rating) * 20}%
 
 function OfferPage(): JSX.Element {
   const { id } = useParams();
-  const dispatch = useDispatch<AppDispatch>();
-  const offer = useSelector(selectOffer);
-  const nearbyOffers = useSelector(selectNearbyOffers);
-  const comments = useSelector(selectComments);
-  const isOfferLoading = useSelector(selectIsOfferLoading);
-  const isCommentSubmitting = useSelector(selectIsCommentSubmitting);
-  const isOfferNotFound = useSelector(selectIsOfferNotFound);
-  const authorizationStatus = useSelector(selectAuthorizationStatus);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const offer = useAppSelector(selectOffer);
+  const nearbyOffers = useAppSelector(selectNearbyOffers);
+  const comments = useAppSelector(selectComments);
+  const isOfferLoading = useAppSelector(selectIsOfferLoading);
+  const isCommentSubmitting = useAppSelector(selectIsCommentSubmitting);
+  const isOfferNotFound = useAppSelector(selectIsOfferNotFound);
+  const authorizationStatus = useAppSelector(selectAuthorizationStatus);
 
   useEffect(() => {
     if (id) {
@@ -41,6 +41,37 @@ function OfferPage(): JSX.Element {
     }
   }, [dispatch, id]);
 
+  const handleCommentSubmit = useCallback(
+    (comment: string, rating: number) => {
+      if (!id) {
+        return;
+      }
+
+      dispatch(postComment({ offerId: id, comment, rating }));
+    },
+    [dispatch, id]
+  );
+
+  const handleFavoriteToggle = useCallback(
+    (offerId: string, isFavorite: boolean) => {
+      if (authorizationStatus !== AuthorizationStatus.Auth) {
+        navigate('/login');
+        return;
+      }
+
+      dispatch(toggleFavorite({ offerId, status: isFavorite ? 0 : 1 }));
+    },
+    [authorizationStatus, dispatch, navigate]
+  );
+
+  const city = useMemo(() => {
+    if (!offer) {
+      return DEFAULT_CITY;
+    }
+
+    return CITIES.find((item) => item.name === offer.city) ?? DEFAULT_CITY;
+  }, [offer]);
+
   if (isOfferNotFound) {
     return <NotFoundPage />;
   }
@@ -49,20 +80,9 @@ function OfferPage(): JSX.Element {
     return <Spinner />;
   }
 
-  const city = useMemo(
-    () => CITIES.find((item) => item.name === offer.city) ?? DEFAULT_CITY,
-    [offer.city]
-  );
-
   const avatarClassName = `offer__avatar-wrapper${offer.host.isPro ? ' offer__avatar-wrapper--pro' : ''} user__avatar-wrapper`;
-
-  const handleCommentSubmit = (comment: string, rating: number) => {
-    if (!id) {
-      return;
-    }
-
-    dispatch(postComment({ offerId: id, comment, rating }));
-  };
+  const bookmarkClassName = `offer__bookmark-button button${offer.isFavorite ? ' offer__bookmark-button--active' : ''}`;
+  const bookmarkText = offer.isFavorite ? 'In bookmarks' : 'To bookmarks';
 
   return (
     <div className="page">
@@ -104,8 +124,8 @@ function OfferPage(): JSX.Element {
         <section className="offer">
           <div className="offer__gallery-container container">
             <div className="offer__gallery">
-              {offer.images.map((image, index) => (
-                <div className="offer__image-wrapper" key={`${image}-${index}`}>
+              {offer.images.map((image) => (
+                <div className="offer__image-wrapper" key={image}>
                   <img className="offer__image" src={image} alt={offer.title} />
                 </div>
               ))}
@@ -120,11 +140,15 @@ function OfferPage(): JSX.Element {
               )}
               <div className="offer__name-wrapper">
                 <h1 className="offer__name">{offer.title}</h1>
-                <button className="offer__bookmark-button button" type="button">
+                <button
+                  className={bookmarkClassName}
+                  type="button"
+                  onClick={() => handleFavoriteToggle(offer.id, offer.isFavorite)}
+                >
                   <svg className="offer__bookmark-icon" width="31" height="33">
                     <use xlinkHref="#icon-bookmark"></use>
                   </svg>
-                  <span className="visually-hidden">To bookmarks</span>
+                  <span className="visually-hidden">{bookmarkText}</span>
                 </button>
               </div>
               <div className="offer__rating rating">
@@ -190,7 +214,7 @@ function OfferPage(): JSX.Element {
         <div className="container">
           <section className="near-places places">
             <h2 className="near-places__title">Other places in the neighbourhood</h2>
-            <OffersList offers={nearbyOffers} variant="near-places" />
+            <OffersList offers={nearbyOffers} variant="near-places" onFavoriteToggle={handleFavoriteToggle} />
           </section>
         </div>
       </main>

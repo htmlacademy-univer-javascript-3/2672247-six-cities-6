@@ -139,7 +139,7 @@ function ReviewForm({ onSubmit, isSubmitting = false }: ReviewFormProps): JSX.El
         value={formState.comment}
         onChange={handleCommentChange}
         disabled={isSubmitting}
-      ></textarea>
+      />
       <div className="reviews__button-wrapper">
         <p className="reviews__help">
           To submit review please make sure to set <span className="reviews__star">rating</span> and describe your
