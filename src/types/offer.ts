@@ -11,6 +11,10 @@ export type Offer = {
   rating: number;
   bedrooms: number;
   maxAdults: number;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
   goods: string[];
   host: {
     name: string;

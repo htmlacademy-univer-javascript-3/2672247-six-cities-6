@@ -21,6 +21,10 @@ export const offers: Offer[] = [
     rating: 4.8,
     bedrooms: 3,
     maxAdults: 4,
+    location: {
+      latitude: 52.3909553943508,
+      longitude: 4.85309666406198,
+    },
     goods: [
       'Wi-Fi',
       'Washing machine',
@@ -54,6 +58,10 @@ export const offers: Offer[] = [
     rating: 4.2,
     bedrooms: 1,
     maxAdults: 2,
+    location: {
+      latitude: 52.3609553943508,
+      longitude: 4.85309666406198,
+    },
     goods: ['Wi-Fi', 'Heating', 'Kitchen'],
     host: {
       name: 'Max',
@@ -75,6 +83,10 @@ export const offers: Offer[] = [
     rating: 4.5,
     bedrooms: 2,
     maxAdults: 3,
+    location: {
+      latitude: 52.3909553943508,
+      longitude: 4.929309666406198,
+    },
     goods: ['Wi-Fi', 'Kitchen', 'Dishwasher'],
     host: {
       name: 'Alex',
@@ -88,7 +100,7 @@ export const offers: Offer[] = [
     title: 'Nice, cozy, warm big bed apartment',
     type: 'Apartment',
     price: 180,
-    city: 'Cologne',
+    city: 'Amsterdam',
     previewImage: 'img/apartment-03.jpg',
     images: ['img/apartment-03.jpg', 'img/apartment-01.jpg', 'img/room.jpg'],
     isPremium: true,
@@ -96,6 +108,10 @@ export const offers: Offer[] = [
     rating: 5,
     bedrooms: 3,
     maxAdults: 5,
+    location: {
+      latitude: 52.3809553943508,
+      longitude: 4.939309666406198,
+    },
     goods: ['Wi-Fi', 'Washing machine', 'Heating', 'Kitchen', 'Coffee machine'],
     host: {
       name: 'Sophie',
