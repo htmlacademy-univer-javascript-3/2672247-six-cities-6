@@ -1,20 +1,41 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import CitiesList from '../../components/cities-list/cities-list';
 import Map from '../../components/map/map';
 import OffersList from '../../components/offers-list/offers-list';
-import { CITIES, DEFAULT_CITY } from '../../const';
+import SortingOptions from '../../components/sorting-options/sorting-options';
+import { CITIES, DEFAULT_CITY, SortType } from '../../const';
 import { RootState } from '../../store';
 import { changeCity } from '../../store/action';
+import { Offer } from '../../types/offer';
+
+const sortOffers = (offers: Offer[], sortType: SortType): Offer[] => {
+  switch (sortType) {
+    case 'Price: low to high':
+      return [...offers].sort((first, second) => first.price - second.price);
+    case 'Price: high to low':
+      return [...offers].sort((first, second) => second.price - first.price);
+    case 'Top rated first':
+      return [...offers].sort((first, second) => second.rating - first.rating);
+    default:
+      return offers;
+  }
+};
 
 function MainPage(): JSX.Element {
   const [activeOfferId, setActiveOfferId] = useState<string | null>(null);
+  const [activeSort, setActiveSort] = useState<SortType>('Popular');
   const dispatch = useDispatch();
   const city = useSelector((state: RootState) => state.city);
   const offers = useSelector((state: RootState) => state.offers);
   const selectedCity = CITIES.find((item) => item.name === city) ?? DEFAULT_CITY;
   const offersInCity = offers.filter((offer) => offer.city === selectedCity.name);
+  const sortedOffers = sortOffers(offersInCity, activeSort);
+
+  useEffect(() => {
+    setActiveOfferId(null);
+  }, [city]);
 
   const handleCityClick = (cityName: string) => {
     dispatch(changeCity(cityName));
@@ -68,35 +89,13 @@ function MainPage(): JSX.Element {
               <b className="places__found">
                 {offersInCity.length} places to stay in {selectedCity.name}
               </b>
-              <form className="places__sorting" action="#" method="get">
-                <span className="places__sorting-caption">Sort by</span>
-                <span className="places__sorting-type" tabIndex={0}>
-                  Popular
-                  <svg className="places__sorting-arrow" width="7" height="4">
-                    <use xlinkHref="#icon-arrow-select"></use>
-                  </svg>
-                </span>
-                <ul className="places__options places__options--custom places__options--opened">
-                  <li className="places__option places__option--active" tabIndex={0}>
-                    Popular
-                  </li>
-                  <li className="places__option" tabIndex={0}>
-                    Price: low to high
-                  </li>
-                  <li className="places__option" tabIndex={0}>
-                    Price: high to low
-                  </li>
-                  <li className="places__option" tabIndex={0}>
-                    Top rated first
-                  </li>
-                </ul>
-              </form>
-              <OffersList offers={offersInCity} onActiveOfferChange={setActiveOfferId} />
+              <SortingOptions activeSort={activeSort} onSortChange={setActiveSort} />
+              <OffersList offers={sortedOffers} onActiveOfferChange={setActiveOfferId} />
             </section>
             <div className="cities__right-section">
               <Map
                 city={selectedCity}
-                offers={offersInCity}
+                offers={sortedOffers}
                 activeOfferId={activeOfferId}
                 className="cities__map map"
               />
