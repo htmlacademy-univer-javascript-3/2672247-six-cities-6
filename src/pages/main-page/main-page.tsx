@@ -118,7 +118,12 @@ function MainPage({ offers }: MainPageProps): JSX.Element {
               <OffersList offers={offersInCity} onActiveOfferChange={setActiveOfferId} />
             </section>
             <div className="cities__right-section">
-              <Map city={AMSTERDAM} offers={offersInCity} activeOfferId={activeOfferId} />
+              <Map
+                city={AMSTERDAM}
+                offers={offersInCity}
+                activeOfferId={activeOfferId}
+                className="cities__map map"
+              />
             </div>
           </div>
         </div>

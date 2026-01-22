@@ -5,13 +5,15 @@ import MainPage from '../../pages/main-page/main-page';
 import NotFoundPage from '../../pages/not-found-page/not-found-page';
 import OfferPage from '../../pages/offer-page/offer-page';
 import { Offer } from '../../types/offer';
+import { Review } from '../../types/review';
 import PrivateRoute from '../private-route/private-route';
 
 type AppProps = {
   offers: Offer[];
+  reviews: Review[];
 };
 
-function App({ offers }: AppProps): JSX.Element {
+function App({ offers, reviews }: AppProps): JSX.Element {
   const favoriteOffers = offers.filter((offer) => offer.isFavorite);
   const isAuthorized = false;
 
@@ -28,7 +30,7 @@ function App({ offers }: AppProps): JSX.Element {
             </PrivateRoute>
           )}
         />
-        <Route path="/offer/:id" element={<OfferPage offers={offers} />} />
+        <Route path="/offer/:id" element={<OfferPage offers={offers} reviews={reviews} />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>

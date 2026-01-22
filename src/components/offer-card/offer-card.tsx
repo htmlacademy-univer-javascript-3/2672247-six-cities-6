@@ -3,7 +3,7 @@ import { Offer } from '../../types/offer';
 
 type OfferCardProps = {
   offer: Offer;
-  variant?: 'cities' | 'favorites';
+  variant?: 'cities' | 'favorites' | 'near-places';
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
 };
@@ -11,9 +11,28 @@ type OfferCardProps = {
 const ratingToPercent = (rating: number): string => `${Math.round(rating) * 20}%`;
 
 function OfferCard({ offer, variant = 'cities', onMouseEnter, onMouseLeave }: OfferCardProps): JSX.Element {
-  const cardClassName = variant === 'favorites' ? 'favorites__card' : 'cities__card';
-  const imageWrapperClassName =
-    variant === 'favorites' ? 'favorites__image-wrapper' : 'cities__image-wrapper';
+  const cardClassName = (() => {
+    switch (variant) {
+      case 'favorites':
+        return 'favorites__card';
+      case 'near-places':
+        return 'near-places__card';
+      default:
+        return 'cities__card';
+    }
+  })();
+
+  const imageWrapperClassName = (() => {
+    switch (variant) {
+      case 'favorites':
+        return 'favorites__image-wrapper';
+      case 'near-places':
+        return 'near-places__image-wrapper';
+      default:
+        return 'cities__image-wrapper';
+    }
+  })();
+
   const infoClassName = variant === 'favorites' ? 'favorites__card-info' : '';
   const imageWidth = variant === 'favorites' ? 150 : 260;
   const imageHeight = variant === 'favorites' ? 110 : 200;
