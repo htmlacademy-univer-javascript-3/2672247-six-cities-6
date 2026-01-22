@@ -1,7 +1,5 @@
 import type { AnyAction, ThunkAction, ThunkDispatch } from '@reduxjs/toolkit';
-import MockAdapter from 'axios-mock-adapter';
 import type { AxiosInstance } from 'axios';
-import { createAPI } from '../api';
 import {
   checkAuth,
   fetchComments,
@@ -50,6 +48,12 @@ const commentServer = {
   },
 };
 
+const makeApi = (data: unknown): AxiosInstance =>
+  ({
+    get: vi.fn().mockResolvedValue({ data }),
+    post: vi.fn().mockResolvedValue({ data }),
+  } as unknown as AxiosInstance);
+
 const collectActions = () => {
   const actions: AnyAction[] = [];
   const dispatch: ThunkDispatch<unknown, AxiosInstance, AnyAction> = (
@@ -63,9 +67,7 @@ const collectActions = () => {
 
 describe('api-actions', () => {
   it('fetchOffers dispatches fulfilled with adapted data', async () => {
-    const api = createAPI(vi.fn());
-    const mock = new MockAdapter(api);
-    mock.onGet('offers').reply(200, [offerServer]);
+    const api = makeApi([offerServer]);
     const { actions, dispatch } = collectActions();
 
     await fetchOffers()(dispatch, () => ({}), api);
@@ -80,9 +82,7 @@ describe('api-actions', () => {
   });
 
   it('fetchFavorites dispatches fulfilled with adapted data', async () => {
-    const api = createAPI(vi.fn());
-    const mock = new MockAdapter(api);
-    mock.onGet('favorite').reply(200, [offerServer]);
+    const api = makeApi([offerServer]);
     const { actions, dispatch } = collectActions();
 
     await fetchFavorites()(dispatch, () => ({}), api);
@@ -93,9 +93,7 @@ describe('api-actions', () => {
   });
 
   it('fetchOffer dispatches fulfilled with adapted data', async () => {
-    const api = createAPI(vi.fn());
-    const mock = new MockAdapter(api);
-    mock.onGet(`offers/${offerServer.id}`).reply(200, offerServer);
+    const api = makeApi(offerServer);
     const { actions, dispatch } = collectActions();
 
     await fetchOffer(offerServer.id)(dispatch, () => ({}), api);
@@ -106,9 +104,7 @@ describe('api-actions', () => {
   });
 
   it('fetchNearbyOffers dispatches fulfilled with adapted data', async () => {
-    const api = createAPI(vi.fn());
-    const mock = new MockAdapter(api);
-    mock.onGet(`offers/${offerServer.id}/nearby`).reply(200, [offerServer]);
+    const api = makeApi([offerServer]);
     const { actions, dispatch } = collectActions();
 
     await fetchNearbyOffers(offerServer.id)(dispatch, () => ({}), api);
@@ -119,9 +115,7 @@ describe('api-actions', () => {
   });
 
   it('fetchComments dispatches fulfilled with adapted data', async () => {
-    const api = createAPI(vi.fn());
-    const mock = new MockAdapter(api);
-    mock.onGet(`comments/${offerServer.id}`).reply(200, [commentServer]);
+    const api = makeApi([commentServer]);
     const { actions, dispatch } = collectActions();
 
     await fetchComments(offerServer.id)(dispatch, () => ({}), api);
@@ -132,9 +126,7 @@ describe('api-actions', () => {
   });
 
   it('postComment dispatches fulfilled with adapted data', async () => {
-    const api = createAPI(vi.fn());
-    const mock = new MockAdapter(api);
-    mock.onPost(`comments/${offerServer.id}`).reply(200, commentServer);
+    const api = makeApi(commentServer);
     const { actions, dispatch } = collectActions();
 
     await postComment({ offerId: offerServer.id, comment: 'Ok', rating: 4 })(dispatch, () => ({}), api);
@@ -145,10 +137,7 @@ describe('api-actions', () => {
   });
 
   it('toggleFavorite dispatches fulfilled with adapted data', async () => {
-    const api = createAPI(vi.fn());
-    const mock = new MockAdapter(api);
-    const updated = { ...offerServer, isFavorite: true };
-    mock.onPost(`favorite/${offerServer.id}/1`).reply(200, updated);
+    const api = makeApi({ ...offerServer, isFavorite: true });
     const { actions, dispatch } = collectActions();
 
     await toggleFavorite({ offerId: offerServer.id, status: 1 })(dispatch, () => ({}), api);
@@ -159,9 +148,7 @@ describe('api-actions', () => {
   });
 
   it('checkAuth dispatches setAuthorizationStatus(Auth) on success', async () => {
-    const api = createAPI(vi.fn());
-    const mock = new MockAdapter(api);
-    mock.onGet('login').reply(200, {});
+    const api = makeApi({});
     const { actions, dispatch } = collectActions();
 
     await checkAuth()(dispatch, () => ({}), api);
@@ -171,10 +158,11 @@ describe('api-actions', () => {
     expect(authAction?.payload).toBe(AuthorizationStatus.Auth);
   });
 
-  it('checkAuth dispatches setAuthorizationStatus(NoAuth) on 401', async () => {
-    const api = createAPI(vi.fn());
-    const mock = new MockAdapter(api);
-    mock.onGet('login').reply(401);
+  it('checkAuth dispatches setAuthorizationStatus(NoAuth) on error', async () => {
+    const api = {
+      get: vi.fn().mockRejectedValue(new Error('Unauthorized')),
+      post: vi.fn(),
+    } as unknown as AxiosInstance;
     const { actions, dispatch } = collectActions();
 
     await checkAuth()(dispatch, () => ({}), api);

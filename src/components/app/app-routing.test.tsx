@@ -1,10 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
 import App from './app';
-import { makeStore } from '../../test/test-utils';
 import { AuthorizationStatus } from '../../const';
-import { setAuthorizationStatus } from '../../store/slices/user-slice';
 import { makeOffer } from '../../test/fixtures';
+import type { RootState } from '../../store';
 
 vi.mock('../../store/api-actions', () => ({
   checkAuth: () => ({ type: 'test/checkAuth' }),
@@ -32,10 +32,53 @@ vi.mock('../../pages/not-found-page/not-found-page', () => ({
   default: () => <div>Not found page</div>,
 }));
 
+const defaultState: RootState = {
+  app: {
+    city: 'Paris',
+  },
+  offers: {
+    offers: [],
+    isLoading: false,
+  },
+  offer: {
+    offer: null,
+    nearbyOffers: [],
+    comments: [],
+    isOfferLoading: false,
+    isNearbyLoading: false,
+    isCommentsLoading: false,
+    isCommentSubmitting: false,
+    isOfferNotFound: false,
+  },
+  favorites: {
+    offers: [],
+    isLoading: false,
+  },
+  user: {
+    authorizationStatus: AuthorizationStatus.NoAuth,
+  },
+};
+
+const makeState = (overrides?: Partial<RootState>): RootState => ({
+  ...defaultState,
+  ...overrides,
+  app: { ...defaultState.app, ...overrides?.app },
+  offers: { ...defaultState.offers, ...overrides?.offers },
+  offer: { ...defaultState.offer, ...overrides?.offer },
+  favorites: { ...defaultState.favorites, ...overrides?.favorites },
+  user: { ...defaultState.user, ...overrides?.user },
+});
+
+const makeRoutingStore = (overrides?: Partial<RootState>) =>
+  configureStore({
+    reducer: (state: RootState = defaultState) => state,
+    preloadedState: makeState(overrides),
+  });
+
 describe('App routing', () => {
   it('renders main page on /', () => {
     window.history.pushState({}, '', '/');
-    const store = makeStore();
+    const store = makeRoutingStore();
 
     render(
       <Provider store={store}>
@@ -48,7 +91,7 @@ describe('App routing', () => {
 
   it('renders login page on /login', () => {
     window.history.pushState({}, '', '/login');
-    const store = makeStore();
+    const store = makeRoutingStore();
 
     render(
       <Provider store={store}>
@@ -61,8 +104,9 @@ describe('App routing', () => {
 
   it('redirects to login when visiting /favorites as guest', async () => {
     window.history.pushState({}, '', '/favorites');
-    const store = makeStore();
-    store.dispatch(setAuthorizationStatus(AuthorizationStatus.NoAuth));
+    const store = makeRoutingStore({
+      user: { authorizationStatus: AuthorizationStatus.NoAuth },
+    });
 
     render(
       <Provider store={store}>
@@ -77,13 +121,13 @@ describe('App routing', () => {
 
   it('renders favorites page when authorized', () => {
     window.history.pushState({}, '', '/favorites');
-    const store = makeStore({
+    const store = makeRoutingStore({
       favorites: {
         offers: [makeOffer({ id: '1' })],
         isLoading: false,
       },
+      user: { authorizationStatus: AuthorizationStatus.Auth },
     });
-    store.dispatch(setAuthorizationStatus(AuthorizationStatus.Auth));
 
     render(
       <Provider store={store}>
@@ -96,7 +140,7 @@ describe('App routing', () => {
 
   it('renders offer page on /offer/:id', () => {
     window.history.pushState({}, '', '/offer/123');
-    const store = makeStore();
+    const store = makeRoutingStore();
 
     render(
       <Provider store={store}>
@@ -109,7 +153,7 @@ describe('App routing', () => {
 
   it('renders not found page on unknown route', () => {
     window.history.pushState({}, '', '/unknown');
-    const store = makeStore();
+    const store = makeRoutingStore();
 
     render(
       <Provider store={store}>
