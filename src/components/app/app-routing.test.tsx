@@ -39,6 +39,7 @@ const defaultState: RootState = {
   offers: {
     offers: [],
     isLoading: false,
+    hasError: false,
   },
   offer: {
     offer: null,
@@ -48,6 +49,7 @@ const defaultState: RootState = {
     isNearbyLoading: false,
     isCommentsLoading: false,
     isCommentSubmitting: false,
+    commentPostError: null,
     isOfferNotFound: false,
   },
   favorites: {
@@ -56,6 +58,7 @@ const defaultState: RootState = {
   },
   user: {
     authorizationStatus: AuthorizationStatus.NoAuth,
+    user: null,
   },
 };
 
@@ -105,7 +108,7 @@ describe('App routing', () => {
   it('redirects to login when visiting /favorites as guest', async () => {
     window.history.pushState({}, '', '/favorites');
     const store = makeRoutingStore({
-      user: { authorizationStatus: AuthorizationStatus.NoAuth },
+      user: { authorizationStatus: AuthorizationStatus.NoAuth, user: null },
     });
 
     render(
@@ -126,7 +129,7 @@ describe('App routing', () => {
         offers: [makeOffer({ id: '1' })],
         isLoading: false,
       },
-      user: { authorizationStatus: AuthorizationStatus.Auth },
+      user: { authorizationStatus: AuthorizationStatus.Auth, user: null },
     });
 
     render(

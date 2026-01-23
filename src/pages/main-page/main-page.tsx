@@ -9,14 +9,16 @@ import Spinner from '../../components/spinner/spinner';
 import { AuthorizationStatus, CITIES, DEFAULT_CITY, SortType } from '../../const';
 import { useAppDispatch, useAppSelector } from '../../hooks/store';
 import { changeCity } from '../../store/slices/app-slice';
-import { toggleFavorite } from '../../store/api-actions';
+import { logout, toggleFavorite } from '../../store/api-actions';
 import {
   selectAuthorizationStatus,
   selectCity,
   selectFavoritesCount,
   selectOffersByCity,
+  selectOffersError,
   selectOffersLoading,
   selectSortedOffers,
+  selectUser,
 } from '../../store/selectors';
 
 function MainPage(): JSX.Element {
@@ -26,8 +28,10 @@ function MainPage(): JSX.Element {
   const navigate = useNavigate();
   const city = useAppSelector(selectCity);
   const isOffersLoading = useAppSelector(selectOffersLoading);
+  const hasOffersError = useAppSelector(selectOffersError);
   const authorizationStatus = useAppSelector(selectAuthorizationStatus);
   const favoritesCount = useAppSelector(selectFavoritesCount);
+  const user = useAppSelector(selectUser);
   const offersInCity = useAppSelector(selectOffersByCity);
   const sortedOffers = useAppSelector((state) => selectSortedOffers(state, activeSort));
 
@@ -36,7 +40,7 @@ function MainPage(): JSX.Element {
     [city]
   );
 
-  const isEmpty = !isOffersLoading && offersInCity.length === 0;
+  const isEmpty = !isOffersLoading && offersInCity.length === 0 && !hasOffersError;
 
   useEffect(() => {
     setActiveOfferId(null);
@@ -65,6 +69,10 @@ function MainPage(): JSX.Element {
     [authorizationStatus, dispatch, navigate]
   );
 
+  const handleLogout = () => {
+    dispatch(logout());
+  };
+
   return (
     <div className="page page--gray page--main">
       <header className="header">
@@ -83,19 +91,19 @@ function MainPage(): JSX.Element {
             </div>
             <nav className="header__nav">
               <ul className="header__nav-list">
-                {authorizationStatus === AuthorizationStatus.Auth ? (
+                {authorizationStatus === AuthorizationStatus.Auth && user ? (
                   <>
                     <li className="header__nav-item user">
                       <Link className="header__nav-link header__nav-link--profile" to="/favorites">
                         <div className="header__avatar-wrapper user__avatar-wrapper"></div>
-                        <span className="header__user-name user__name">Oliver.conner@gmail.com</span>
+                        <span className="header__user-name user__name">{user.email}</span>
                         <span className="header__favorite-count">{favoritesCount}</span>
                       </Link>
                     </li>
                     <li className="header__nav-item">
-                      <Link className="header__nav-link" to="/login">
-                        <span className="header__signout">Sign out</span>
-                      </Link>
+                      <button className="header__nav-link" type="button" onClick={handleLogout}>
+                        <span className="header__signout">Log out</span>
+                      </button>
                     </li>
                   </>
                 ) : (
@@ -124,9 +132,15 @@ function MainPage(): JSX.Element {
             <div className="cities__places-container container">
               <section className="cities__places places" data-active-offer-id={activeOfferId ?? ''}>
                 <h2 className="visually-hidden">Places</h2>
-                <b className="places__found">
-                  {offersInCity.length} places to stay in {selectedCity.name}
-                </b>
+                {hasOffersError ? (
+                  <div className="places__sorting">
+                    <b>Unable to load offers. Please try again later.</b>
+                  </div>
+                ) : (
+                  <b className="places__found">
+                    {offersInCity.length} places to stay in {selectedCity.name}
+                  </b>
+                )}
                 <SortingOptions activeSort={activeSort} onSortChange={handleSortChange} />
                 {isOffersLoading ? (
                   <Spinner />

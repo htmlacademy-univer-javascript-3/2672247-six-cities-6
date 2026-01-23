@@ -5,11 +5,13 @@ import { fetchOffers, toggleFavorite } from '../api-actions';
 export type OffersState = {
   offers: Offer[];
   isLoading: boolean;
+  hasError: boolean;
 };
 
 const initialState: OffersState = {
   offers: [],
   isLoading: false,
+  hasError: false,
 };
 
 const offersSlice = createSlice({
@@ -20,13 +22,16 @@ const offersSlice = createSlice({
     builder
       .addCase(fetchOffers.pending, (state) => {
         state.isLoading = true;
+        state.hasError = false;
       })
       .addCase(fetchOffers.fulfilled, (state, action) => {
         state.offers = action.payload;
         state.isLoading = false;
+        state.hasError = false;
       })
       .addCase(fetchOffers.rejected, (state) => {
         state.isLoading = false;
+        state.hasError = true;
       });
     builder.addCase(toggleFavorite.fulfilled, (state, action) => {
       state.offers = state.offers.map((offer) =>

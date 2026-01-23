@@ -19,6 +19,7 @@ describe('offerSlice', () => {
       isNearbyLoading: false,
       isCommentsLoading: false,
       isCommentSubmitting: false,
+      commentPostError: null,
       isOfferNotFound: false,
     });
   });

@@ -11,7 +11,7 @@ import {
   toggleFavorite,
 } from './api-actions';
 import { AuthorizationStatus } from '../const';
-import { setAuthorizationStatus } from './slices/user-slice';
+import { clearUser, setAuthorizationStatus, setUser } from './slices/user-slice';
 
 const offerServer = {
   id: 'offer-1',
@@ -46,6 +46,14 @@ const commentServer = {
     avatarUrl: 'img/avatar-kate.jpg',
     isPro: true,
   },
+};
+
+const authInfo = {
+  name: 'Oliver Conner',
+  avatarUrl: 'img/avatar.png',
+  isPro: false,
+  email: 'oliver@example.com',
+  token: 'token-1',
 };
 
 const makeApi = (data: unknown): AxiosInstance =>
@@ -148,14 +156,16 @@ describe('api-actions', () => {
   });
 
   it('checkAuth dispatches setAuthorizationStatus(Auth) on success', async () => {
-    const api = makeApi({});
+    const api = makeApi(authInfo);
     const { actions, dispatch } = collectActions();
 
     await checkAuth()(dispatch, () => ({}), api);
 
     const authAction = actions.find(setAuthorizationStatus.match);
+    const userAction = actions.find(setUser.match);
     expect(authAction).toBeTruthy();
     expect(authAction?.payload).toBe(AuthorizationStatus.Auth);
+    expect(userAction?.payload).toMatchObject({ email: authInfo.email });
   });
 
   it('checkAuth dispatches setAuthorizationStatus(NoAuth) on error', async () => {
@@ -168,7 +178,10 @@ describe('api-actions', () => {
     await checkAuth()(dispatch, () => ({}), api);
 
     const authAction = actions.find(setAuthorizationStatus.match);
+    const clearAction = actions.find(clearUser.match);
     expect(authAction).toBeTruthy();
     expect(authAction?.payload).toBe(AuthorizationStatus.NoAuth);
+    expect(clearAction).toBeTruthy();
   });
+
 });

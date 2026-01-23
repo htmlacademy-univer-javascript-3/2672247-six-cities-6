@@ -6,6 +6,7 @@ describe('userSlice', () => {
     const state = userReducer(undefined, { type: 'UNKNOWN' });
     expect(state).toEqual({
       authorizationStatus: AuthorizationStatus.Unknown,
+      user: null,
     });
   });
 

@@ -19,7 +19,7 @@ describe('FavoritesPage', () => {
     const store = makeStore({
       user: { authorizationStatus: AuthorizationStatus.NoAuth },
     });
-    store.dispatch = vi.fn();
+    store.dispatch = vi.fn() as unknown as typeof store.dispatch;
 
     render(
       <Provider store={store}>
@@ -43,7 +43,7 @@ describe('FavoritesPage', () => {
     const store = makeStore({
       user: { authorizationStatus: AuthorizationStatus.Auth },
     });
-    store.dispatch = vi.fn();
+    store.dispatch = vi.fn() as unknown as typeof store.dispatch;
     const toggleFavoriteSpy = vi.spyOn(apiActions, 'toggleFavorite');
 
     render(

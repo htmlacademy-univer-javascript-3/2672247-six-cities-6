@@ -12,4 +12,11 @@ describe('ReviewsList', () => {
     expect(screen.getByText('2')).toBeInTheDocument();
     expect(container.querySelectorAll('.reviews__item').length).toBe(reviews.length);
   });
+
+  it('renders total count when provided', () => {
+    const reviews = [makeReview({ id: '1' })];
+    render(<ReviewsList reviews={reviews} totalCount={5} />);
+
+    expect(screen.getByText('5')).toBeInTheDocument();
+  });
 });

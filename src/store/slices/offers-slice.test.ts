@@ -8,12 +8,14 @@ describe('offersSlice', () => {
     expect(state).toEqual({
       offers: [],
       isLoading: false,
+      hasError: false,
     });
   });
 
   it('sets loading on fetchOffers.pending', () => {
     const state = offersReducer(undefined, fetchOffers.pending('', undefined));
     expect(state.isLoading).toBe(true);
+    expect(state.hasError).toBe(false);
   });
 
   it('stores offers on fetchOffers.fulfilled', () => {
@@ -21,17 +23,22 @@ describe('offersSlice', () => {
     const state = offersReducer(undefined, fetchOffers.fulfilled(offers, '', undefined));
     expect(state.offers).toEqual(offers);
     expect(state.isLoading).toBe(false);
+    expect(state.hasError).toBe(false);
   });
 
   it('stops loading on fetchOffers.rejected', () => {
     const state = offersReducer(undefined, fetchOffers.rejected(null, '', undefined));
     expect(state.isLoading).toBe(false);
+    expect(state.hasError).toBe(true);
   });
 
   it('updates offer on toggleFavorite.fulfilled', () => {
     const offer = makeOffer({ id: '1', isFavorite: false });
     const updatedOffer = { ...offer, isFavorite: true };
-    const state = offersReducer({ offers: [offer], isLoading: false }, toggleFavorite.fulfilled(updatedOffer, '', { offerId: '1', status: 1 }));
+    const state = offersReducer(
+      { offers: [offer], isLoading: false, hasError: false },
+      toggleFavorite.fulfilled(updatedOffer, '', { offerId: '1', status: 1 })
+    );
     expect(state.offers[0].isFavorite).toBe(true);
   });
 });

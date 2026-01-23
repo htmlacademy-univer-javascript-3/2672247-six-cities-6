@@ -10,6 +10,10 @@ import favoritesReducer from '../store/slices/favorites-slice';
 import userReducer from '../store/slices/user-slice';
 import { RootState } from '../store';
 
+type DeepPartial<T> = {
+  [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+};
+
 const rootReducer = combineReducers({
   app: appReducer,
   offers: offersReducer,
@@ -18,7 +22,7 @@ const rootReducer = combineReducers({
   user: userReducer,
 });
 
-export const makeStore = (preloadedState?: Partial<RootState>) =>
+export const makeStore = (preloadedState?: DeepPartial<RootState>) =>
   configureStore({
     reducer: rootReducer,
     preloadedState: preloadedState as RootState,
@@ -26,7 +30,7 @@ export const makeStore = (preloadedState?: Partial<RootState>) =>
 
 export const renderWithProviders = (
   ui: ReactElement,
-  preloadedState?: Partial<RootState>
+  preloadedState?: DeepPartial<RootState>
 ) => {
   const store = makeStore(preloadedState);
   return render(<Provider store={store}>{ui}</Provider>);

@@ -1,15 +1,18 @@
-import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthorizationStatus } from '../../const';
+import { AuthorizationStatus, CITIES } from '../../const';
 import { useAppDispatch, useAppSelector } from '../../hooks/store';
 import { login } from '../../store/api-actions';
+import { changeCity } from '../../store/slices/app-slice';
 import { selectAuthorizationStatus } from '../../store/selectors';
 
 function LoginPage(): JSX.Element {
   const [formState, setFormState] = useState({ email: '', password: '' });
+  const [formError, setFormError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const authorizationStatus = useAppSelector(selectAuthorizationStatus);
+  const randomCity = useMemo(() => CITIES[Math.floor(Math.random() * CITIES.length)], []);
 
   useEffect(() => {
     if (authorizationStatus === AuthorizationStatus.Auth) {
@@ -20,11 +23,24 @@ function LoginPage(): JSX.Element {
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setFormState((prevState) => ({ ...prevState, [name]: value }));
+    setFormError(null);
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    const passwordValid = /^(?=.*\p{L})(?=.*\d).+$/u.test(formState.password);
+    if (!passwordValid) {
+      setFormError('Password must contain at least one letter and one number.');
+      return;
+    }
+
     dispatch(login({ email: formState.email, password: formState.password }));
+  };
+
+  const handleRandomCityClick = () => {
+    dispatch(changeCity(randomCity.name));
+    navigate('/');
   };
 
   return (
@@ -43,6 +59,16 @@ function LoginPage(): JSX.Element {
                 />
               </Link>
             </div>
+            <nav className="header__nav">
+              <ul className="header__nav-list">
+                <li className="header__nav-item user">
+                  <Link className="header__nav-link header__nav-link--profile" to="/login">
+                    <div className="header__avatar-wrapper user__avatar-wrapper"></div>
+                    <span className="header__login">Sign in</span>
+                  </Link>
+                </li>
+              </ul>
+            </nav>
           </div>
         </div>
       </header>
@@ -52,6 +78,7 @@ function LoginPage(): JSX.Element {
           <section className="login">
             <h1 className="login__title">Sign in</h1>
             <form className="login__form form" action="#" method="post" onSubmit={handleSubmit}>
+              {formError && <p className="login__error">{formError}</p>}
               <div className="login__input-wrapper form__input-wrapper">
                 <label className="visually-hidden">E-mail</label>
                 <input
@@ -83,9 +110,9 @@ function LoginPage(): JSX.Element {
           </section>
           <section className="locations locations--login locations--current">
             <div className="locations__item">
-              <a className="locations__item-link" href="/#todo">
-                <span>Amsterdam</span>
-              </a>
+              <button className="locations__item-link" type="button" onClick={handleRandomCityClick}>
+                <span>{randomCity.name}</span>
+              </button>
             </div>
           </section>
         </div>

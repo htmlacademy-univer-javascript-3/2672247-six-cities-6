@@ -33,10 +33,11 @@ describe('OfferPage', () => {
         isNearbyLoading: false,
         isCommentsLoading: false,
         isCommentSubmitting: false,
+        commentPostError: null,
         isOfferNotFound: true,
       },
     });
-    store.dispatch = vi.fn();
+    store.dispatch = vi.fn() as unknown as typeof store.dispatch;
 
     render(
       <Provider store={store}>
@@ -61,10 +62,11 @@ describe('OfferPage', () => {
         isNearbyLoading: false,
         isCommentsLoading: false,
         isCommentSubmitting: false,
+        commentPostError: null,
         isOfferNotFound: false,
       },
     });
-    store.dispatch = vi.fn();
+    store.dispatch = vi.fn() as unknown as typeof store.dispatch;
 
     render(
       <Provider store={store}>
@@ -90,11 +92,12 @@ describe('OfferPage', () => {
         isNearbyLoading: false,
         isCommentsLoading: false,
         isCommentSubmitting: false,
+        commentPostError: null,
         isOfferNotFound: false,
       },
-      user: { authorizationStatus: AuthorizationStatus.Auth },
+      user: { authorizationStatus: AuthorizationStatus.Auth, user: null },
     });
-    store.dispatch = vi.fn();
+    store.dispatch = vi.fn() as unknown as typeof store.dispatch;
 
     render(
       <Provider store={store}>

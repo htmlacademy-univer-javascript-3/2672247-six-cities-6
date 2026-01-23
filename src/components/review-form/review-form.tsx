@@ -1,8 +1,9 @@
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { useEffect, useState, ChangeEvent, FormEvent } from 'react';
 
 type ReviewFormProps = {
   onSubmit: (comment: string, rating: number) => void;
   isSubmitting?: boolean;
+  errorMessage?: string | null;
 };
 
 type ReviewFormState = {
@@ -11,12 +12,14 @@ type ReviewFormState = {
 };
 
 const MIN_COMMENT_LENGTH = 50;
+const MAX_COMMENT_LENGTH = 300;
 
-function ReviewForm({ onSubmit, isSubmitting = false }: ReviewFormProps): JSX.Element {
+function ReviewForm({ onSubmit, isSubmitting = false, errorMessage = null }: ReviewFormProps): JSX.Element {
   const [formState, setFormState] = useState<ReviewFormState>({
     rating: '',
     comment: '',
   });
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleRatingChange = (event: ChangeEvent<HTMLInputElement>) => {
     setFormState((prevState) => ({
@@ -40,10 +43,26 @@ function ReviewForm({ onSubmit, isSubmitting = false }: ReviewFormProps): JSX.El
     }
 
     onSubmit(formState.comment, Number(formState.rating));
+    setIsSubmitted(true);
   };
 
   const isSubmitDisabled =
-    isSubmitting || formState.rating === '' || formState.comment.length < MIN_COMMENT_LENGTH;
+    isSubmitting ||
+    formState.rating === '' ||
+    formState.comment.length < MIN_COMMENT_LENGTH ||
+    formState.comment.length > MAX_COMMENT_LENGTH;
+
+  useEffect(() => {
+    if (isSubmitted && !isSubmitting && !errorMessage) {
+      setFormState({ rating: '', comment: '' });
+      setIsSubmitted(false);
+      return;
+    }
+
+    if (isSubmitted && errorMessage) {
+      setIsSubmitted(false);
+    }
+  }, [errorMessage, isSubmitted, isSubmitting]);
 
   return (
     <form className="reviews__form form" action="#" method="post" onSubmit={handleSubmit}>
@@ -141,6 +160,7 @@ function ReviewForm({ onSubmit, isSubmitting = false }: ReviewFormProps): JSX.El
         disabled={isSubmitting}
       />
       <div className="reviews__button-wrapper">
+        {errorMessage && <p className="reviews__error">{errorMessage}</p>}
         <p className="reviews__help">
           To submit review please make sure to set <span className="reviews__star">rating</span> and describe your
           stay with at least <b className="reviews__text-amount">50 characters</b>.

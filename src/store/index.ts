@@ -1,7 +1,7 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { createAPI } from '../api';
 import { AuthorizationStatus } from '../const';
-import { setAuthorizationStatus } from './slices/user-slice';
+import { clearUser, setAuthorizationStatus } from './slices/user-slice';
 import appReducer from './slices/app-slice';
 import favoritesReducer from './slices/favorites-slice';
 import offerReducer from './slices/offer-slice';
@@ -36,6 +36,7 @@ const store = configureStore({
 
 onUnauthorized = () => {
   store.dispatch(setAuthorizationStatus(AuthorizationStatus.NoAuth));
+  store.dispatch(clearUser());
 };
 
 export type AppDispatch = typeof store.dispatch;

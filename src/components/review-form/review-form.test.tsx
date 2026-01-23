@@ -24,4 +24,9 @@ describe('ReviewForm', () => {
 
     expect(onSubmit).toHaveBeenCalledWith('a'.repeat(60), 5);
   });
+
+  it('shows error message when provided', () => {
+    render(<ReviewForm onSubmit={() => {}} errorMessage="Failed to submit review." />);
+    expect(screen.getByText('Failed to submit review.')).toBeInTheDocument();
+  });
 });

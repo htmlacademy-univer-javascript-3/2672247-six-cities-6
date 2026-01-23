@@ -11,6 +11,7 @@ export type OfferState = {
   isNearbyLoading: boolean;
   isCommentsLoading: boolean;
   isCommentSubmitting: boolean;
+  commentPostError: string | null;
   isOfferNotFound: boolean;
 };
 
@@ -22,6 +23,7 @@ const initialState: OfferState = {
   isNearbyLoading: false,
   isCommentsLoading: false,
   isCommentSubmitting: false,
+  commentPostError: null,
   isOfferNotFound: false,
 };
 
@@ -67,13 +69,16 @@ const offerSlice = createSlice({
       })
       .addCase(postComment.pending, (state) => {
         state.isCommentSubmitting = true;
+        state.commentPostError = null;
       })
       .addCase(postComment.fulfilled, (state, action) => {
         state.comments = [action.payload, ...state.comments];
         state.isCommentSubmitting = false;
+        state.commentPostError = null;
       })
       .addCase(postComment.rejected, (state) => {
         state.isCommentSubmitting = false;
+        state.commentPostError = 'Failed to submit review. Please try again.';
       });
     builder.addCase(toggleFavorite.fulfilled, (state, action) => {
       if (state.offer && state.offer.id === action.payload.id) {

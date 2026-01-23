@@ -7,15 +7,19 @@ import ReviewsList from '../../components/reviews-list/reviews-list';
 import Spinner from '../../components/spinner/spinner';
 import { AuthorizationStatus, CITIES, DEFAULT_CITY } from '../../const';
 import { useAppDispatch, useAppSelector } from '../../hooks/store';
-import { fetchComments, fetchNearbyOffers, fetchOffer, postComment, toggleFavorite } from '../../store/api-actions';
+import { fetchComments, fetchNearbyOffers, fetchOffer, logout, postComment, toggleFavorite } from '../../store/api-actions';
 import {
   selectAuthorizationStatus,
-  selectComments,
+  selectCommentsCount,
+  selectCommentsSorted,
+  selectCommentPostError,
+  selectFavoritesCount,
   selectIsCommentSubmitting,
   selectIsOfferLoading,
   selectIsOfferNotFound,
   selectNearbyOffers,
   selectOffer,
+  selectUser,
 } from '../../store/selectors';
 import NotFoundPage from '../not-found-page/not-found-page';
 
@@ -27,7 +31,11 @@ function OfferPage(): JSX.Element {
   const navigate = useNavigate();
   const offer = useAppSelector(selectOffer);
   const nearbyOffers = useAppSelector(selectNearbyOffers);
-  const comments = useAppSelector(selectComments);
+  const comments = useAppSelector(selectCommentsSorted);
+  const commentsCount = useAppSelector(selectCommentsCount);
+  const commentPostError = useAppSelector(selectCommentPostError);
+  const favoritesCount = useAppSelector(selectFavoritesCount);
+  const user = useAppSelector(selectUser);
   const isOfferLoading = useAppSelector(selectIsOfferLoading);
   const isCommentSubmitting = useAppSelector(selectIsCommentSubmitting);
   const isOfferNotFound = useAppSelector(selectIsOfferNotFound);
@@ -80,9 +88,24 @@ function OfferPage(): JSX.Element {
     return <Spinner />;
   }
 
+  const nearbyOffersLimited = nearbyOffers.slice(0, 3);
+  const mapOffers = [offer, ...nearbyOffersLimited];
+
   const avatarClassName = `offer__avatar-wrapper${offer.host.isPro ? ' offer__avatar-wrapper--pro' : ''} user__avatar-wrapper`;
   const bookmarkClassName = `offer__bookmark-button button${offer.isFavorite ? ' offer__bookmark-button--active' : ''}`;
   const bookmarkText = offer.isFavorite ? 'In bookmarks' : 'To bookmarks';
+  const typeLabelMap: Record<string, string> = {
+    apartment: 'Apartment',
+    room: 'Room',
+    house: 'House',
+    hotel: 'Hotel',
+  };
+  const typeLabel = typeLabelMap[offer.type] ?? offer.type;
+  const bedroomsLabel = offer.bedrooms === 1 ? 'Bedroom' : 'Bedrooms';
+  const adultsLabel = offer.maxAdults === 1 ? 'adult' : 'adults';
+  const handleLogout = () => {
+    dispatch(logout());
+  };
 
   return (
     <div className="page">
@@ -102,18 +125,29 @@ function OfferPage(): JSX.Element {
             </div>
             <nav className="header__nav">
               <ul className="header__nav-list">
-                <li className="header__nav-item user">
-                  <Link className="header__nav-link header__nav-link--profile" to="/login">
-                    <div className="header__avatar-wrapper user__avatar-wrapper"></div>
-                    <span className="header__user-name user__name">Oliver.conner@gmail.com</span>
-                    <span className="header__favorite-count">3</span>
-                  </Link>
-                </li>
-                <li className="header__nav-item">
-                  <Link className="header__nav-link" to="/login">
-                    <span className="header__signout">Sign out</span>
-                  </Link>
-                </li>
+                {authorizationStatus === AuthorizationStatus.Auth && user ? (
+                  <>
+                    <li className="header__nav-item user">
+                      <Link className="header__nav-link header__nav-link--profile" to="/favorites">
+                        <div className="header__avatar-wrapper user__avatar-wrapper"></div>
+                        <span className="header__user-name user__name">{user.email}</span>
+                        <span className="header__favorite-count">{favoritesCount}</span>
+                      </Link>
+                    </li>
+                    <li className="header__nav-item">
+                      <button className="header__nav-link" type="button" onClick={handleLogout}>
+                        <span className="header__signout">Log out</span>
+                      </button>
+                    </li>
+                  </>
+                ) : (
+                  <li className="header__nav-item user">
+                    <Link className="header__nav-link header__nav-link--profile" to="/login">
+                      <div className="header__avatar-wrapper user__avatar-wrapper"></div>
+                      <span className="header__login">Sign in</span>
+                    </Link>
+                  </li>
+                )}
               </ul>
             </nav>
           </div>
@@ -124,7 +158,7 @@ function OfferPage(): JSX.Element {
         <section className="offer">
           <div className="offer__gallery-container container">
             <div className="offer__gallery">
-              {offer.images.map((image) => (
+              {offer.images.slice(0, 6).map((image) => (
                 <div className="offer__image-wrapper" key={image}>
                   <img className="offer__image" src={image} alt={offer.title} />
                 </div>
@@ -159,9 +193,13 @@ function OfferPage(): JSX.Element {
                 <span className="offer__rating-value rating__value">{offer.rating}</span>
               </div>
               <ul className="offer__features">
-                <li className="offer__feature offer__feature--entire">{offer.type}</li>
-                <li className="offer__feature offer__feature--bedrooms">{offer.bedrooms} Bedrooms</li>
-                <li className="offer__feature offer__feature--adults">Max {offer.maxAdults} adults</li>
+                <li className="offer__feature offer__feature--entire">{typeLabel}</li>
+                <li className="offer__feature offer__feature--bedrooms">
+                  {offer.bedrooms} {bedroomsLabel}
+                </li>
+                <li className="offer__feature offer__feature--adults">
+                  Max {offer.maxAdults} {adultsLabel}
+                </li>
               </ul>
               <div className="offer__price">
                 <b className="offer__price-value">&euro;{offer.price}</b>
@@ -194,27 +232,30 @@ function OfferPage(): JSX.Element {
                 </div>
                 <div className="offer__description">
                   <p className="offer__text">{offer.description}</p>
-                  <p className="offer__text">
-                    An independent House, strategically located between Rembrand Square and National
-                    Opera, but where the bustle of the city comes to rest in this alley flowery and
-                    colorful.
-                  </p>
                 </div>
               </div>
               <section className="offer__reviews reviews">
-                <ReviewsList reviews={comments} />
+                <ReviewsList reviews={comments} totalCount={commentsCount} />
                 {authorizationStatus === AuthorizationStatus.Auth && (
-                  <ReviewForm onSubmit={handleCommentSubmit} isSubmitting={isCommentSubmitting} />
+                  <ReviewForm
+                    onSubmit={handleCommentSubmit}
+                    isSubmitting={isCommentSubmitting}
+                    errorMessage={commentPostError}
+                  />
                 )}
               </section>
             </div>
           </div>
-          <Map city={city} offers={nearbyOffers} activeOfferId={null} className="offer__map map" />
+          <Map city={city} offers={mapOffers} activeOfferId={offer.id} className="offer__map map" />
         </section>
         <div className="container">
           <section className="near-places places">
             <h2 className="near-places__title">Other places in the neighbourhood</h2>
-            <OffersList offers={nearbyOffers} variant="near-places" onFavoriteToggle={handleFavoriteToggle} />
+            <OffersList
+              offers={nearbyOffersLimited}
+              variant="near-places"
+              onFavoriteToggle={handleFavoriteToggle}
+            />
           </section>
         </div>
       </main>

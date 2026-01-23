@@ -1,10 +1,11 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AxiosInstance } from 'axios';
 import { AuthorizationStatus } from '../const';
-import { saveToken } from '../services/token';
+import { dropToken, saveToken } from '../services/token';
 import { Offer } from '../types/offer';
 import { Review } from '../types/review';
-import { setAuthorizationStatus } from './slices/user-slice';
+import { UserInfo } from '../types/user';
+import { clearUser, setAuthorizationStatus, setUser } from './slices/user-slice';
 
 type OfferServer = {
   id: string;
@@ -130,17 +131,30 @@ type AuthData = {
 };
 
 type AuthInfo = {
+  name: string;
+  avatarUrl: string;
+  isPro: boolean;
+  email: string;
   token: string;
 };
+
+const adaptUserInfo = (authInfo: AuthInfo): UserInfo => ({
+  name: authInfo.name,
+  avatarUrl: authInfo.avatarUrl,
+  isPro: authInfo.isPro,
+  email: authInfo.email,
+});
 
 export const checkAuth = createAsyncThunk<void, undefined, { extra: AxiosInstance }>(
   'user/checkAuth',
   async (_arg, { dispatch, extra: api }) => {
     try {
-      await api.get('login');
+      const { data } = await api.get<AuthInfo>('login');
+      dispatch(setUser(adaptUserInfo(data)));
       dispatch(setAuthorizationStatus(AuthorizationStatus.Auth));
     } catch {
       dispatch(setAuthorizationStatus(AuthorizationStatus.NoAuth));
+      dispatch(clearUser());
     }
   }
 );
@@ -150,7 +164,18 @@ export const login = createAsyncThunk<void, AuthData, { extra: AxiosInstance }>(
   async ({ email, password }, { dispatch, extra: api }) => {
     const { data } = await api.post<AuthInfo>('login', { email, password });
     saveToken(data.token);
+    dispatch(setUser(adaptUserInfo(data)));
     dispatch(setAuthorizationStatus(AuthorizationStatus.Auth));
+  }
+);
+
+export const logout = createAsyncThunk<void, undefined, { extra: AxiosInstance }>(
+  'user/logout',
+  async (_arg, { dispatch, extra: api }) => {
+    await api.delete('logout');
+    dropToken();
+    dispatch(clearUser());
+    dispatch(setAuthorizationStatus(AuthorizationStatus.NoAuth));
   }
 );
 
